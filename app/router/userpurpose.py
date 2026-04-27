@@ -28,7 +28,7 @@ async def get_tenant_products_endpoint(
     return wrap_response(data=result, message="Tenant products fetched successfully")
 
 
-@router.get("/discovery", response_model=BaseResponse[List[ProductUserMarketplace]])
+@router.get("/user/discovery", response_model=BaseResponse[List[ProductUserMarketplace]])
 async def discover_new_apps_user(
     auth: dict = Depends(get_session_identity),
     db: Session = Depends(get_db)

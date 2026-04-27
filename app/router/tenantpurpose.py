@@ -226,7 +226,7 @@ async def get_my_products(
     return wrap_response(data=result, message="Tenant products fetched successfully")
 
 
-@router.get("/discovery", response_model=BaseResponse[List[ProductMarketplace]])
+@router.get("/tenant/discovery", response_model=BaseResponse[List[ProductMarketplace]])
 async def discover_new_apps(
     auth: dict = Depends(get_session_identity),
     db: Session = Depends(get_db)
