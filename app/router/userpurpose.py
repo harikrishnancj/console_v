@@ -9,6 +9,7 @@ from app.crud.crud4user_products import (
     get_user_products as crud_get_user_products,
     get_tenant_products_for_user as crud_get_tenant_products,
     get_user_product_by_id as crud_get_user_product_by_id,
+    get_user_discovery_products as crud_get_user_discovery_products,
 )
 from app.schemas.product import ProductInDBBase, ProductUserMarketplace
 from app.utils.response import wrap_response
@@ -33,9 +34,12 @@ async def discover_new_apps_user(
     auth: dict = Depends(get_session_identity),
     db: Session = Depends(get_db)
 ):
-    """Shows all products available in marketplace that this tenant has NOT subscribed to yet."""
-    # We can reuse the same crud since it's based on tenant_id
-    result = product_crud.get_unsubscribed_products(db=db, tenant_id=auth["tenant_id"])
+    """
+    Shows apps for discovery:
+    1. Apps that the tenant HAS NOT purchased.
+    2. Apps that the user DOES NOT have access to, but the tenant HAS purchased.
+    """
+    result = crud_get_user_discovery_products(db, auth["user_id"], auth["tenant_id"])
     return wrap_response(data=result, message="Discovery apps fetched successfully")
 
 
