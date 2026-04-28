@@ -38,7 +38,9 @@ def get_usage_statistics(db: Session, tenant_id: int, user_id: int = None):
     if user_id:
         stats = stats.filter(ProductSession.user_id == user_id)
         
-    return stats.group_by(Product.product_id).all()
+    return stats.group_by(Product.product_id)\
+                .order_by(func.max(ProductSession.created_at).desc())\
+                .all()
 
 def get_recently_used_apps(db: Session, tenant_id: int, user_id: int = None, limit: int = 5):
     query = db.query(
@@ -52,4 +54,18 @@ def get_recently_used_apps(db: Session, tenant_id: int, user_id: int = None, lim
         
     return query.group_by(Product.product_id)\
                 .order_by(func.max(ProductSession.created_at).desc())\
+                .limit(limit).all()
+
+def get_frequently_used_apps(db: Session, tenant_id: int, user_id: int = None, limit: int = 3):
+    query = db.query(
+        Product.product_id,
+        Product.product_name,
+        func.count(ProductSession.id).label("usage_count")
+    ).join(ProductSession).filter(ProductSession.tenant_id == tenant_id)
+    
+    if user_id:
+        query = query.filter(ProductSession.user_id == user_id)
+        
+    return query.group_by(Product.product_id)\
+                .order_by(func.count(ProductSession.id).desc())\
                 .limit(limit).all()

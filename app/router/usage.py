@@ -42,3 +42,9 @@ async def get_recent(limit: int = 3, auth: dict = Depends(get_session_identity),
     recent = crud4usage.get_recently_used_apps(db, auth["tenant_id"], auth.get("user_id"), limit)
     results = [{"product_id": r.product_id, "app_name": r.product_name, "last_used": r.last_accessed} for r in recent]
     return wrap_response(data=results, message="Recent apps retrieved")
+
+@router.get("/frequently-used")
+async def get_frequent(limit: int = 3, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
+    frequent = crud4usage.get_frequently_used_apps(db, auth["tenant_id"], auth.get("user_id"), limit)
+    results = [{"product_id": r.product_id, "app_name": r.product_name, "usage_count": r.usage_count} for r in frequent]
+    return wrap_response(data=results, message="Frequent apps retrieved")
