@@ -21,7 +21,7 @@ def record_logout(db: Session, session_token: str):
 
 
 
-def get_usage_statistics(db: Session, tenant_id: int, user_id: int = None):
+def get_usage_statistics(db: Session, tenant_id: int, user_id: int = None, product_id: int = None):
     # Logic: Use logout_at if it exists, otherwise use last_heartbeat
     stats = db.query(
         Product.product_id,
@@ -37,6 +37,9 @@ def get_usage_statistics(db: Session, tenant_id: int, user_id: int = None):
     
     if user_id:
         stats = stats.filter(ProductSession.user_id == user_id)
+    
+    if product_id:
+        stats = stats.filter(Product.product_id == product_id)
         
     return stats.group_by(Product.product_id)\
                 .order_by(func.max(ProductSession.created_at).desc())\

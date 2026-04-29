@@ -55,7 +55,21 @@ def get_all_role_user_mappings(db: Session, tenant_id: int, user_id: Optional[in
         query = query.filter(RoleUserMapping.role_id == role_id)
     return query.all()
 
-
+def get_users_by_role_id(db: Session, role_id: int, tenant_id: int):
+    users = db.query(User).join(RoleUserMapping).filter(
+        RoleUserMapping.role_id == role_id, 
+        RoleUserMapping.tenant_id == tenant_id).all()
+    
+    return [
+        {
+            "user_id": user.user_id,
+            "username": user.username,
+            "email": user.email,
+            "is_active": user.is_active,
+            "tenant_id": user.tenant_id,
+            "roles": [mapping.role.role_name for mapping in user.user_roles if mapping.role]
+        } for user in users
+    ]
 
 
 def delete_role_user_mapping(db: Session, role_user_mapping_id: int, tenant_id: int):

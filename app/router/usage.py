@@ -25,8 +25,8 @@ async def app_logout(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/analytics")
-async def get_analytics(auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
-    rows = crud4usage.get_usage_statistics(db, auth["tenant_id"], auth.get("user_id"))
+async def get_analytics(product_id: int = None, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
+    rows = crud4usage.get_usage_statistics(db, auth["tenant_id"], auth.get("user_id"), product_id)
     results = []
     for r in rows:
         results.append({

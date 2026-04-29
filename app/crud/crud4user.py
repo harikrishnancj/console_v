@@ -3,7 +3,7 @@ from app.models import User
 from app.schemas.user import UserUpdate, UserInDBBase
 from app.core.security import hash_password, verify_password
 from fastapi import HTTPException
-
+from sqlalchemy.orm import selectinload
 
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
@@ -55,3 +55,32 @@ def update_user_email_name(db: Session, user_id: int, user_update, tenant_id: in
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+
+def sorting_user_based_on_username(
+    db: Session,
+    tenant_id: int,
+    sort_order: str = "asc"   # default ascending
+):
+    query = db.query(User).options(selectinload(User.user_roles)).filter(User.tenant_id == tenant_id)
+
+    if sort_order.lower() == "desc":
+        query = query.order_by(User.username.desc())
+    else:
+        query = query.order_by(User.username.asc())
+
+    users = query.all()
+    
+    return [
+        {
+            "user_id": user.user_id,
+            "username": user.username,
+            "email": user.email,
+            "is_active": user.is_active,
+            "tenant_id": user.tenant_id,
+            "roles": [mapping.role.role_name for mapping in user.user_roles if mapping.role]
+        } for user in users
+    ]
+
+    

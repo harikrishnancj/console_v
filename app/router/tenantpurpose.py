@@ -12,12 +12,12 @@ from app.crud import crud4tpm as tenant_product_map_crud
 from app.schemas.tenant_product_map import TenantProductMapInDBBase, TenantProductMapCreate, TenantProductMapWithDetails, TenantProductMappingSpecific
 from app.schemas.tenant import Tenantpassupdate,TenantInDBBase
 from app.crud import crud4rum as role_user_mapping_crud
+from app.crud import crud4user 
 from app.schemas.role_user_mapping import RoleUserMappingInDBBase, RoleUserMappingCreate
 from app.crud import crud4arm as app_role_mapping_crud
 from app.schemas.app_role_mapping import AppRoleMappingInDBBase, AppRoleMappingCreate
 from app.crud import product as product_crud
 from app.schemas.product import ProductInDBBase, ProductMarketplace
-
 from app.crud import crud4prm as permission_role_mapping_crud
 from app.schemas.permission_role_mapping import PermissionRoleMappingCreate, PermissionRoleMappingResponse, PermissionRoleMappingUpdate
 from app.schemas.permission import PermissionResponse
@@ -43,6 +43,24 @@ async def read_users(
 ):
     result = user_crud.get_all_users(db=db, tenant_id=auth["tenant_id"], name=name, email=email)
     return wrap_response(data=result, message="Users fetched successfully")
+
+@router.get('/users/sort', response_model=BaseResponse[List[UserWithRoles]])
+async def sorting_user_based_on_username(
+    sort_order: str = "asc",  # Default to asc, can be changed to ?sort_order=desc
+    db: Session = Depends(get_db),
+    auth: dict = Depends(get_session_identity)
+):
+    if sort_order.lower() not in ["asc", "desc"]:
+        sort_order = "asc"
+        
+    result = crud4user.sorting_user_based_on_username(
+        db=db, 
+        tenant_id=auth["tenant_id"], 
+        sort_order=sort_order
+    )
+    return wrap_response(data=result, message=f"Users sorted by username in {sort_order} order")
+
+
 
 @router.get("/users/search", response_model=BaseResponse[List[UserWithRoles]])
 async def search_users(
@@ -157,6 +175,12 @@ async def create_role_user_mapping(role_user_mapping: RoleUserMappingCreate, aut
 async def read_role_user_mappings(auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
     result = role_user_mapping_crud.get_all_role_user_mappings(db=db, tenant_id=auth["tenant_id"])
     return wrap_response(data=result, message="Role user mappings fetched successfully")
+
+@router.get("/role_user_mappings/by-role/{role_id}", response_model=BaseResponse[List[UserWithRoles]])
+async def read_users_by_role_id(role_id: int, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
+    result = role_user_mapping_crud.get_users_by_role_id(db=db, tenant_id=auth["tenant_id"], role_id=role_id)
+    return wrap_response(data=result, message="Users by role id fetched successfully")
+
 
 @router.get("/role_user_mappings/{role_user_mapping_id}", response_model=BaseResponse[RoleUserMappingInDBBase])
 async def read_role_user_mapping(role_user_mapping_id: int, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
