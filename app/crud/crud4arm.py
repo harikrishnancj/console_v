@@ -77,3 +77,18 @@ def delete_app_role_mapping(db: Session, app_role_mapping_id: int, tenant_id: in
     db.delete(db_app_role_mapping)
     db.commit()
     return db_app_role_mapping
+
+def fetch_app_role_mapping_by_role(db: Session, tenant_id: int, role_ids: list[int]):
+    results = db.query(AppRoleMapping, Role.role_name).join(
+        Role, AppRoleMapping.role_id == Role.role_id
+    ).filter(
+        AppRoleMapping.role_id.in_(role_ids),
+        AppRoleMapping.tenant_id == tenant_id
+    ).all()
+    
+    # Process results to attach role_name and return as a list
+    for mapping, role_name in results:
+        mapping.role_name = role_name
+        
+    return [mapping for mapping, role_name in results]
+    

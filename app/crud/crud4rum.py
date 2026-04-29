@@ -55,9 +55,9 @@ def get_all_role_user_mappings(db: Session, tenant_id: int, user_id: Optional[in
         query = query.filter(RoleUserMapping.role_id == role_id)
     return query.all()
 
-def get_users_by_role_id(db: Session, role_id: int, tenant_id: int):
+def get_users_by_role_id(db: Session, role_ids: list[int], tenant_id: int):
     users = db.query(User).join(RoleUserMapping).filter(
-        RoleUserMapping.role_id == role_id, 
+        RoleUserMapping.role_id.in_(role_ids), 
         RoleUserMapping.tenant_id == tenant_id).all()
     
     return [

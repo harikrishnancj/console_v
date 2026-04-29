@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.utils.session_resolver import get_session_identity
@@ -153,13 +153,17 @@ async def read_app_role_mapping(app_role_mapping_id: int, auth: dict = Depends(g
         raise HTTPException(status_code=404, detail="App role mapping not found")
     return wrap_response(data=db_app_role_mapping, message="App role mapping details fetched successfully")
 
-
 @router.delete("/app_role_mappings/{app_role_mapping_id}", response_model=BaseResponse[AppRoleMappingInDBBase])
 async def delete_app_role_mapping(app_role_mapping_id: int, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
     result = app_role_mapping_crud.delete_app_role_mapping(db=db, app_role_mapping_id=app_role_mapping_id, tenant_id=auth["tenant_id"])
     if not result:
         raise HTTPException(status_code=404, detail="App role mapping not found")
     return wrap_response(data=result, message="App role mapping deleted successfully")
+
+@router.get("/app_role_mappings/by-role", response_model=BaseResponse[List[AppRoleMappingInDBBase]])
+async def read_app_role_mappings_by_role(role_ids: list[int] = Query(...), auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
+    result = app_role_mapping_crud.fetch_app_role_mapping_by_role(db=db, tenant_id=auth["tenant_id"], role_ids=role_ids)
+    return wrap_response(data=result, message="App role mappings fetched successfully")
 
 @router.post("/role_user_mappings", response_model=BaseResponse[List[RoleUserMappingInDBBase]])
 async def create_role_user_mapping(role_user_mapping: RoleUserMappingCreate, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
@@ -176,9 +180,9 @@ async def read_role_user_mappings(auth: dict = Depends(get_session_identity), db
     result = role_user_mapping_crud.get_all_role_user_mappings(db=db, tenant_id=auth["tenant_id"])
     return wrap_response(data=result, message="Role user mappings fetched successfully")
 
-@router.get("/role_user_mappings/by-role/{role_id}", response_model=BaseResponse[List[UserWithRoles]])
-async def read_users_by_role_id(role_id: int, auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
-    result = role_user_mapping_crud.get_users_by_role_id(db=db, tenant_id=auth["tenant_id"], role_id=role_id)
+@router.get("/role_user_mappings/by-role", response_model=BaseResponse[List[UserWithRoles]])
+async def read_users_by_role_id(role_ids: list[int] = Query(...), auth: dict = Depends(get_session_identity), db: Session = Depends(get_db)):
+    result = role_user_mapping_crud.get_users_by_role_id(db=db, tenant_id=auth["tenant_id"], role_ids=role_ids)
     return wrap_response(data=result, message="Users by role id fetched successfully")
 
 
